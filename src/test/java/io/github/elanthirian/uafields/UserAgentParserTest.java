@@ -767,6 +767,90 @@ class UserAgentParserTest {
     }
 
     @Test
+    void embeddedAppsWinOverTheHostBrowserAndUnknownNamesAreKept() {
+        ParseResult crm = parser.parse(
+                "ZohoCRM/3.3.19 (Linux; Android 8.1.0; Redmi Note 5 Pro Build/OPM1.171019.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.91 Mobile Safari/537.36");
+        assertEquals("Zoho CRM", crm.get("software_name"));
+        assertEquals(List.of("3", "3", "19"), crm.get("software_version_full"));
+        assertEquals("application", crm.get("software_type"));
+        assertNotEquals("Chrome", crm.get("software_name"));
+
+        ParseResult projects = parser.parse(
+                "ZohoProjects/3.1.1 (Linux; Android 5.1.1; A37f Build/LMY47V; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/69.0.3497.91 Mobile Safari/537.36");
+        assertEquals("Zoho Projects", projects.get("software_name"));
+        assertEquals("3", projects.get("software_version"));
+
+        ParseResult docs = parser.parse("Zoho Docs/5.16 (iOS 10.3.3; iPhone Scale/3.00)");
+        assertEquals("Zoho Docs", docs.get("software_name"));
+        assertEquals(List.of("5", "16"), docs.get("software_version_full"));
+
+        ParseResult assist = parser.parse("ZohoAssist/1.5 (Android 6.0; CUBOT MAX)");
+        assertEquals("Zoho Assist", assist.get("software_name"));
+        assertEquals("1", assist.get("software_version"));
+
+        ParseResult desk = parser.parse("Zoho Desk/2.2.1 (Linux; U; Android 5.1; ELUGA_I2 Build/LMY47D)");
+        assertEquals("Zoho Desk", desk.get("software_name"));
+
+        ParseResult recruit = parser.parse("ZohoRecruit/2.3 (iOS 11.3.1; iPhone Scale/2.00)");
+        assertEquals("Zoho Recruit", recruit.get("software_name"));
+
+        ParseResult meeting = parser.parse("ZohoMeeting/2.0");
+        assertEquals("Zoho Meeting", meeting.get("software_name"));
+
+        ParseResult social = parser.parse("com.zoho.zohosocial/3.3.9");
+        assertEquals("Zoho Social", social.get("software_name"));
+        assertEquals(List.of("3", "3", "9"), social.get("software_version_full"));
+
+        ParseResult show = parser.parse("com.zoho.showtime.presenter/3.2.2");
+        assertEquals("Zoho Showtime", show.get("software_name"));
+
+        ParseResult writer = parser.parse("writer/2.4.1");
+        assertEquals("Zoho Writer", writer.get("software_name"));
+        assertEquals(List.of("2", "4", "1"), writer.get("software_version_full"));
+
+        ParseResult cliq = parser.parse(
+                "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cliq/1.3.1 Chrome/58.0.3029.110 Electron/1.7.15 Safari/537.36 ZohoCliqDesktop/23");
+        assertEquals("Zoho Cliq", cliq.get("software_name"));
+        assertEquals(List.of("1", "3", "1"), cliq.get("software_version_full"));
+
+        ParseResult monitor = parser.parse("Site24x7/1.2.0");
+        assertEquals("Site24x7", monitor.get("software_name"));
+
+        ParseResult earth = parser.parse("GoogleEarth/7.3.0 (Windows NT 10.0)");
+        assertEquals("Google Earth", earth.get("software_name"));
+        assertEquals("7", earth.get("software_version"));
+
+        ParseResult air = parser.parse("AdobeAIR/32.0");
+        assertEquals("Adobe AIR", air.get("software_name"));
+
+        ParseResult tunes = parser.parse("iTunes/12.12.8");
+        assertEquals("iTunes", tunes.get("software_name"));
+
+        ParseResult quora = parser.parse(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Quora/1.0 Mobile/15E148");
+        assertEquals("Quora", quora.get("software_name"));
+
+        ParseResult zalo = parser.parse("Zalo/23.04.01");
+        assertEquals("Zalo", zalo.get("software_name"));
+
+        ParseResult electron = parser.parse(
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Electron/28.0.0");
+        assertEquals("Electron", electron.get("software_name"));
+        assertEquals("28", electron.get("software_version"));
+
+        ParseResult acme = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) AcmeBrowser/4.2 Chrome/120.0.0.0 Safari/537.36");
+        assertEquals("AcmeBrowser", acme.get("software_name"));
+        assertEquals("4", acme.get("software_version"));
+        assertEquals("in-app-browser", acme.get("software_sub_type"));
+        assertNotEquals("Chrome", acme.get("software_name"));
+
+        ParseResult chrome = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        assertEquals("Chrome", chrome.get("software_name"));
+    }
+
+    @Test
     void versionCompareTreatsMissingComponentsAsZero() {
         assertTrue(Version.parse("154.0.8037").compareAt(Version.parse("154.0.8037.58"), 3) == 0);
         assertTrue(Version.parse("9.8.1").compareAt(Version.parse("9.8"), 0) > 0);

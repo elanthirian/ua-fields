@@ -162,6 +162,8 @@ HTTP libraries stay `software-library` or `tool` (`Java HTTP Client`, `Java` wit
 - Per-build dates exist only for builds the official history file lists. Chrome's feed currently starts at 54. Edge's update API does not publish the old archive. Safari versions are listed without dates.
 - There is no network call during parse. Currency of "latest" is the catalog snapshot you ship. `java -cp target/classes io.github.elanthirian.uafields.CatalogRefresh` rewrites it from the vendor feeds.
 
+A browser that does not exist yet needs no code change. Any `Name/version` token that is not a layout engine or a platform is the software. `Ladybird/1.2` is Ladybird. `Acme/2.0` next to Chrome stays Acme, and Chrome stays the engine. If the vendored uap-core rules have a more specific family than that raw token, that family is used instead.
+
 ## Build
 
 Java 17+.

@@ -22,6 +22,9 @@ final class UapMerge {
         if (agent == null || agent.family() == null || "Other".equalsIgnoreCase(agent.family())) {
             return current;
         }
+        if (current != null && current.fallback && genericFamily(agent.family())) {
+            return current;
+        }
         if (current == null || current.fallback) {
             return fromAgent(agent, current);
         }

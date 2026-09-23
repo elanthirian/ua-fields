@@ -93,11 +93,19 @@ final class SoftwareDetector {
         if (hit != null) {
             return hit;
         }
-        hit = browser(ua);
+        hit = apps(ua);
         if (hit != null) {
             return hit;
         }
         hit = library(ua);
+        if (hit != null) {
+            return hit;
+        }
+        hit = unlisted(ua);
+        if (hit != null) {
+            return hit;
+        }
+        hit = browser(ua);
         if (hit != null) {
             return hit;
         }
@@ -209,6 +217,123 @@ final class SoftwareDetector {
 
     private static SoftwareHit application(String name, String version, String subType) {
         return new SoftwareHit(name, Text.slug(name), Version.parse(version), "application", subType, null, false);
+    }
+
+    /** Product tokens that embed a browser. The host engine must not win. */
+    private static final String[][] APPS = {
+            {"ZohoCliqDesktop", "Zoho Cliq"},
+            {"ZohoAssist", "Zoho Assist"},
+            {"Zoho Docs", "Zoho Docs"},
+            {"ZohoMeeting", "Zoho Meeting"},
+            {"Zoho Desk", "Zoho Desk"},
+            {"ZohoRecruit", "Zoho Recruit"},
+            {"ZohoProjects", "Zoho Projects"},
+            {"com.zoho.zohosocial", "Zoho Social"},
+            {"com.zoho.showtime.presenter", "Zoho Showtime"},
+            {"ZohoCRM", "Zoho CRM"},
+            {"Site24x7", "Site24x7"},
+            {"Google Earth Pro", "Google Earth Pro"},
+            {"GoogleEarth", "Google Earth"},
+            {"Google Earth", "Google Earth"},
+            {"AdobeAIR", "Adobe AIR"},
+            {"AlienBlue", "AlienBlue"},
+            {"AirWatch Browser", "AirWatch Browser"},
+            {"iTunes", "iTunes"},
+            {"Quora", "Quora"},
+            {"Zalo", "Zalo"},
+            {"Amaya", "Amaya"},
+            {"Awesomium", "Awesomium"},
+            {"Electron", "Electron"}
+    };
+
+    private static final Set<String> ENGINE_TOKENS = Set.of(
+            "mozilla", "applewebkit", "webkit", "version", "safari", "mobile", "gecko", "khtml",
+            "chrome", "chromium", "crios", "crmo", "headlesschrome", "edg", "edge", "edgios", "edga",
+            "opr", "opera", "firefox", "fxios", "focus", "samsungbrowser", "silk", "trident", "msie",
+            "iemobile", "yabrowser", "vivaldi", "ucbrowser", "qqbrowser", "duckduckgo", "whale",
+            "waterfox", "palemoon", "seamonkey", "brave", "opios", "linux", "android", "darwin",
+            "windows", "macintosh", "x11", "cpu", "build", "scale", "compatible", "like", "intel");
+
+    private static SoftwareHit apps(String ua) {
+        if (hasSlashToken(ua, "writer")) {
+            return application("Zoho Writer", Text.versionAfter(ua, "writer"), null);
+        }
+        if (ua.contains("ZohoCliq") || hasSlashToken(ua, "Cliq")) {
+            String version = boundedVersion(ua, "Cliq");
+            if (version == null) {
+                version = boundedVersion(ua, "ZohoCliqDesktop");
+            }
+            return application("Zoho Cliq", version, null);
+        }
+        for (String[] row : APPS) {
+            if (hasAppToken(ua, row[0])) {
+                return application(row[1], Text.versionAfter(ua, row[0]), null);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * A product this library does not list. The raw Name/version is kept when the only other
+     * match is a layout engine. A more specific uap-core family still replaces it.
+     */
+    private static SoftwareHit unlisted(String ua) {
+        Matcher matcher = PRODUCT.matcher(ua);
+        while (matcher.find()) {
+            String name = matcher.group(1);
+            if (ENGINE_TOKENS.contains(name.toLowerCase(java.util.Locale.ROOT))
+                    || IGNORE_PRODUCTS.contains(name.toLowerCase(java.util.Locale.ROOT))) {
+                continue;
+            }
+            boolean embedded = ua.contains("Chrome/") || ua.contains("CriOS/") || ua.contains("Firefox/")
+                    || ua.contains("AppleWebKit/") || ua.contains("Safari/");
+            if (embedded) {
+                return inAppBrowser(name, matcher.group(2)).asFallback();
+            }
+            boolean browserShaped = ua.contains("Mozilla/5.0") || ua.contains("Mozilla/4.0");
+            return new SoftwareHit(name, Text.slug(name), Version.parse(matcher.group(2)),
+                    browserShaped ? "browser" : "application",
+                    browserShaped ? "web-browser" : null,
+                    null, false).asFallback();
+        }
+        return null;
+    }
+
+    private static boolean hasAppToken(String ua, String token) {
+        String lower = ua.toLowerCase(java.util.Locale.ROOT);
+        String needle = token.toLowerCase(java.util.Locale.ROOT);
+        int from = 0;
+        while (from < lower.length()) {
+            int at = lower.indexOf(needle, from);
+            if (at < 0) {
+                return false;
+            }
+            int end = at + needle.length();
+            boolean leftOk = at == 0 || !isProductChar(lower.charAt(at - 1));
+            boolean rightOk = end >= lower.length() || !isProductChar(lower.charAt(end));
+            if (leftOk && rightOk) {
+                return true;
+            }
+            from = at + 1;
+        }
+        return false;
+    }
+
+    private static String boundedVersion(String ua, String token) {
+        String lower = ua.toLowerCase(java.util.Locale.ROOT);
+        String needle = token.toLowerCase(java.util.Locale.ROOT) + "/";
+        int from = 0;
+        while (from < lower.length()) {
+            int at = lower.indexOf(needle, from);
+            if (at < 0) {
+                return null;
+            }
+            if (at == 0 || !isProductChar(lower.charAt(at - 1))) {
+                return Text.readVersion(ua, at + needle.length());
+            }
+            from = at + 1;
+        }
+        return null;
     }
 
     private static SoftwareHit browser(String ua) {
