@@ -138,7 +138,17 @@ Every parse returns these keys. Unknown values are null. Lists and maps are empt
 | macOS 15 and 26, iOS 15, 16, 18, and 26, Android 14 through 16, Windows 11 24H2, 25H2, and 26H1 | outdated, security support still open |
 | Windows 11 23H2 and older, Windows 10 and older, Android 13 and older, iOS 17, macOS 14 and older, Windows Phone | end of life |
 | Windows 11 with no build (client hint only) | checkable, not end of life, freshness unknown |
-| Linux, Chrome OS, Fire OS, PlayStation, tvOS | not checkable |
+
+Linux and the other names below are recognized. They are not in [os.txt](src/main/resources/catalog/os.txt), so `operating_system_support.is_checkable` stays false. The support check needs a version key. These strings do not keep one we can date:
+
+| Name | What the user agent keeps | Why there is no support row |
+| --- | --- | --- |
+| Linux and its flavours (Ubuntu, Debian, Fedora, CentOS, Red Hat, Linux Mint, Arch, openSUSE, Gentoo, Alpine, Kali) | The flavour, when the name is in the string. `operating_system_version` is always null | End of life is per release (`Ubuntu 22.04`, not "Ubuntu"). Browser strings almost never carry that release, and generic Linux has no single vendor lifecycle |
+| Chrome OS | The name only. The platform build in `CrOS x86_64 14541.0.0` is discarded | Auto-update expiry is per device board, and the board is not in the string. That platform build is not a Chrome OS milestone |
+| Fire OS | The name only. A Kindle or Silk token is taken off the Android path, and the Android version is discarded | The string does not say `Fire OS 8`, so there is no Fire OS major to compare |
+| PlayStation | Console generation only (`PlayStation 5`), not a system-software version | A generation is not a firmware release. PS3, PS4, and PS5 do not share one support date |
+| tvOS | Parsed as `ATV OS X` with the `CPU OS` version | The version is kept, then not scored. The support lookup only keys Windows, Android, iOS, iPadOS, and macOS |
+| Wear OS | Not a detected operating-system name | A watch browser string is Android, or sometimes Tizen. Nothing looks for `Wear OS`, so a catalog row would not match. Apple `watchOS` is parsed with a version and is also absent from the support table |
 
 There is no CVE list. An old browser is not marked `is_abusive`, and it is not reclassified as a bot.
 
