@@ -27,6 +27,20 @@ final class OsDetector {
             return new OsHit("visionOS", version, parts(version), null,
                     version == null ? "visionOS" : "visionOS " + version, List.of());
         }
+        if (ua.contains("Windows Phone")) {
+            String version = Text.group(Pattern.compile("Windows Phone (?:OS )?(\\d+(?:\\.\\d+)*)"), ua);
+            return new OsHit("Windows Phone", version, parts(version), null,
+                    version == null ? "Windows Phone" : "Windows Phone " + version, List.of());
+        }
+        if (ua.contains("Apple TV") || ua.contains("AppleTV")) {
+            Matcher tv = IOS.matcher(ua);
+            if (tv.find()) {
+                String version = numericText(Integer.parseInt(tv.group(1)), Integer.parseInt(tv.group(2)),
+                        tv.group(3) == null ? null : Integer.parseInt(tv.group(3)));
+                return new OsHit("ATV OS X", version, parts(version), null, "ATV OS X " + version, List.of());
+            }
+            return new OsHit("ATV OS X", null, List.of(), null, "ATV OS X", List.of());
+        }
         Matcher android = ANDROID.matcher(ua);
         if (android.find()) {
             if (ua.contains("Silk/") || ua.contains("Kindle Fire") || ua.matches("(?s).*\\bKF[A-Z0-9]{2,}.*")) {
@@ -44,6 +58,9 @@ final class OsDetector {
                 return ios(major, minor, patch, ipad);
             }
         }
+        if (ua.contains("CriOS/") || ua.contains("EdgiOS/") || ua.contains("FxiOS/") || ua.contains("OPiOS/")) {
+            return new OsHit("iOS", null, List.of(), null, "iOS", List.of());
+        }
         Matcher mac = MAC.matcher(ua);
         if (mac.find()) {
             int major = Integer.parseInt(mac.group(1));
@@ -58,11 +75,6 @@ final class OsDetector {
         if (windows.find()) {
             return windowsNt(windows.group(1), windows.group(2));
         }
-        if (ua.contains("Windows Phone")) {
-            String version = Text.group(Pattern.compile("Windows Phone (?:OS )?(\\d+(?:\\.\\d+)*)"), ua);
-            return new OsHit("Windows Phone", version, parts(version), null,
-                    version == null ? "Windows Phone" : "Windows Phone " + version, List.of());
-        }
         if (ua.contains("CrOS")) {
             return new OsHit("Chrome OS", null, List.of(), null, "Chrome OS", List.of());
         }
@@ -74,8 +86,8 @@ final class OsDetector {
         if (ua.contains("Web0S") || ua.contains("webOS")) {
             return new OsHit("webOS", null, List.of(), null, "webOS", List.of());
         }
-        if (ua.contains("PlayStation")) {
-            String generation = Text.group(Pattern.compile("PlayStation (\\d+)"), ua);
+        if (ua.toLowerCase(java.util.Locale.ROOT).contains("playstation")) {
+            String generation = Text.group(Pattern.compile("(?i)PlayStation (\\d+)"), ua);
             String display = generation == null ? "PlayStation" : "PlayStation " + generation;
             return new OsHit("PlayStation", generation, generation == null ? List.of() : List.of(generation), null, display, List.of());
         }

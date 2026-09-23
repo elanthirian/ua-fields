@@ -1,0 +1,7 @@
+regexes.yaml
+  Source: https://github.com/ua-parser/uap-core
+  Copyright 2009 Google Inc.
+  Licensed under the Apache License, Version 2.0
+
+ua-fields keeps its own detectors for the families it already names.
+This file is consulted when those detectors do not have a specific match.

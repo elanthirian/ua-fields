@@ -40,28 +40,33 @@ final class HardwareDetector {
         if (ua.contains("watchOS") || ua.contains("Apple Watch")) {
             return device("mobile", "wearable", "watch", "Apple", null, "Apple Watch", "Apple Watch");
         }
-        if (ua.contains("iPod")) {
+        if (Text.containsToken(ua, "iPod")) {
             return device("mobile", "music-player", null, "Apple", "iPod", "iPod", "Apple iPod");
         }
-        if (ua.contains("iPad")) {
+        if (Text.containsToken(ua, "iPad")) {
             return device("mobile", "tablet", null, "Apple", "iPad", "iPad", "Apple iPad");
         }
-        if (ua.contains("iPhone")) {
+        if (Text.containsToken(ua, "iPhone")) {
             return device("mobile", "phone", null, "Apple", "iPhone", "iPhone", "Apple iPhone");
         }
         if (ua.contains("Apple TV") || ua.contains("AppleTV")) {
             return device("large-screen", "tv", null, "Apple", "Apple TV", "Apple TV", "Apple TV");
         }
-        if (ua.contains("PlayStation")) {
-            String generation = Text.group(Pattern.compile("PlayStation (\\d+)"), ua);
-            String name = generation == null ? "PlayStation" : "PlayStation " + generation;
-            return device("large-screen", "game-console", null, "Sony", name, name, "Sony " + name);
+        if (ua.toLowerCase(Locale.ROOT).contains("playstation")) {
+            String generation = Text.group(Pattern.compile("(?i)PlayStation (\\d+)"), ua);
+            if (generation != null) {
+                String name = "PlayStation " + generation;
+                return device("large-screen", "game-console", null, "Sony", name, name, "Sony " + name);
+            }
         }
         if (ua.contains("Xbox")) {
             return device("large-screen", "game-console", null, "Microsoft", "Xbox", "Xbox", "Microsoft Xbox");
         }
-        if (ua.contains("Nintendo Switch") || ua.contains("Nintendo")) {
+        if (ua.contains("Nintendo Switch")) {
             return device("large-screen", "game-console", null, "Nintendo", "Switch", "Nintendo Switch", "Nintendo Switch");
+        }
+        if (ua.contains("Nintendo")) {
+            return device("large-screen", "game-console", null, "Nintendo", null, null, "Nintendo");
         }
         if (ua.contains("SMART-TV") || ua.contains("SmartTV") || ua.contains("Smart-TV") || ua.contains("HbbTV")
                 || ua.contains("Web0S") || ua.contains("BRAVIA") || Text.containsToken(ua, "Tizen") && ua.toLowerCase(Locale.ROOT).contains("tv")) {

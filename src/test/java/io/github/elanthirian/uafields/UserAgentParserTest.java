@@ -13,6 +13,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -376,6 +377,99 @@ class UserAgentParserTest {
         assertEquals(true, check(result).get("is_ahead_of_catalog"));
         assertEquals(true, check(result).get("is_up_to_date"));
         assertEquals(List.of("10", "0", "0", "0"), check(result).get("latest_version"));
+    }
+
+    @Test
+    void uapCoreRulesCompileAndCoverFamiliesWeDidNotName() {
+        assertTrue(UapCore.ruleCount() >= 1200, "rules=" + UapCore.ruleCount());
+        assertEquals(List.of(), UapCore.skipped());
+
+        ParseResult minefield = parser.parse(
+                "Mozilla/5.0 (Windows; Windows NT 5.1; rv:2.0b3pre) Gecko/20100727 Minefield/4.0.1pre");
+        assertEquals("Firefox (Minefield)", minefield.get("software_name"));
+        assertEquals("4", minefield.get("software_version"));
+        assertEquals(List.of("4", "0", "1"), minefield.get("software_version_full"));
+
+        ParseResult coc = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) coc_coc_browser/95.0.150 Chrome/89.0.4389.114 Safari/537.36");
+        assertEquals("Coc Coc", coc.get("software_name"));
+        assertEquals("95", coc.get("software_version"));
+        assertEquals("browser", coc.get("software_type"));
+
+        ParseResult ipadShell = parser.parse(
+                "Mozilla/5.0 (iPad; CPU OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Mobile/11B554a");
+        assertEquals("Mobile Safari UI/WKWebView", ipadShell.get("software_name"));
+        assertEquals("iOS 7.0.4", ipadShell.get("operating_system"));
+        assertEquals("tablet", ipadShell.get("hardware_sub_type"));
+
+        ParseResult playbook = parser.parse(
+                "Mozilla/5.0 (BlackBerry PlayBook - RIM Tablet OS 2.1.0.1917; U) Safari/537.36");
+        assertEquals("BlackBerry WebKit", playbook.get("software_name"));
+        assertEquals("2", playbook.get("software_version"));
+
+        ParseResult ladybird = parser.parse("Ladybird/1.2");
+        assertEquals("Ladybird", ladybird.get("software_name"));
+        assertEquals("browser", ladybird.get("software_type"));
+        assertEquals("1", ladybird.get("software_version"));
+
+        ParseResult ieMobile = parser.parse(
+                "Mozilla/4.0 (compatible; MSIE 7.0; Windows Phone OS 7.0; Trident/3.1; IEMobile/7.0; SAMSUNG; SGH-i917)");
+        assertEquals("IE Mobile", ieMobile.get("software_name"));
+        assertEquals("7", ieMobile.get("software_version"));
+        assertEquals("Windows Phone", ieMobile.get("operating_system_name"));
+        assertEquals("Samsung", ieMobile.get("operating_platform_vendor_name"));
+
+        ParseResult chromeFrame = parser.parse(
+                "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; chromeframe/11.0.660.0)");
+        assertEquals("Chrome Frame", chromeFrame.get("software_name"));
+        assertEquals("11", chromeFrame.get("software_version"));
+
+        ParseResult oculus = parser.parse(
+                "Mozilla/5.0 (X11; Linux x86_64; Quest 2) AppleWebKit/537.36 (KHTML, like Gecko) OculusBrowser/26.2.0.0.10 SamsungBrowser/4.0 Chrome/110.0.5481.192 VR Safari/537.36");
+        assertEquals("Oculus Browser", oculus.get("software_name"));
+        assertEquals("26", oculus.get("software_version"));
+
+        ParseResult chess = parser.parse(
+                "Chesscom-Android/4.9.21-googleplay (Android/15; SM-A165F; ru_RU; contact #android in Slack)");
+        assertEquals("Chesscom-Android", chess.get("software_name"));
+        assertNotEquals("Slack", chess.get("software_name"));
+
+        ParseResult sdk = parser.parse(
+                "ElasticMapReduce/1.0.0 emrfs/s3n {}, aws-sdk-java/1.11.129 Linux/4.4.35-33.55.amzn1.x86_64 OpenJDK_64-Bit_Server_VM/25.141-b16/1.8.0_141");
+        assertEquals("aws-sdk-java", sdk.get("software_name"));
+        assertEquals("1", sdk.get("software_version"));
+
+        ParseResult freebsd = parser.parse(
+                "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.19) Gecko/2010031218 FreeBSD/i386 Firefox/3.0.19");
+        assertEquals("FreeBSD", freebsd.get("operating_system_name"));
+        assertEquals("Firefox", freebsd.get("software_name"));
+
+        ParseResult ds = parser.parse("Mozilla/5.0 (Nintendo 3DS; U; ; en) Version/1.7498.US");
+        assertEquals("game-console", ds.get("hardware_sub_type"));
+        assertEquals("3DS", ds.get("operating_platform_code"));
+        assertNotEquals("Switch", ds.get("operating_platform_code"));
+
+        ParseResult vita = parser.parse(
+                "Mozilla/5.0 (PlayStation Vita 1.81) AppleWebKit/531.22.8 (KHTML, like Gecko) Silk/3.2");
+        assertEquals("PlayStation Vita", vita.get("operating_platform_code"));
+        assertEquals("Sony", vita.get("operating_platform_vendor_name"));
+
+        ParseResult lumia = parser.parse(
+                "Mozilla/5.0 (Mobile; Windows Phone 8.1; Android 4.0; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 920; ANZ821)");
+        assertEquals("Windows Phone", lumia.get("operating_system_name"));
+        assertEquals("IE Mobile", lumia.get("software_name"));
+        assertEquals("Lumia 920", lumia.get("operating_platform_code"));
+
+        ParseResult desktopCriOs = parser.parse(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/125 Version/13.0.3 Safari/605.1.15");
+        assertEquals("iOS", desktopCriOs.get("operating_system_name"));
+        assertEquals("Edge", desktopCriOs.get("software_name"));
+
+        ParseResult appleTv = parser.parse(
+                "AppleCoreMedia/1.0.0.12F69 (Apple TV; U; CPU OS 8_3 like Mac OS X; en_us)");
+        assertEquals("ATV OS X", appleTv.get("operating_system_name"));
+        assertEquals("8.3", appleTv.get("operating_system_version"));
+        assertEquals("Apple TV", appleTv.get("operating_platform"));
     }
 
     @Test

@@ -64,6 +64,18 @@ final class SoftwareDetector {
     private SoftwareDetector() {
     }
 
+    static String botSubTypeForName(String family) {
+        if (family == null) {
+            return null;
+        }
+        for (String[] row : BOTS) {
+            if (row[0].equalsIgnoreCase(family) || row[1].equalsIgnoreCase(family)) {
+                return row[2];
+            }
+        }
+        return null;
+    }
+
     static SoftwareHit detect(String ua) {
         SoftwareHit hit = bot(ua);
         if (hit != null) {
@@ -160,9 +172,8 @@ final class SoftwareDetector {
         if (ua.contains("GSA/")) {
             return inAppBrowser("Google Search App", Text.versionAfter(ua, "GSA"));
         }
-        hit = namedApp(ua, "Slack", "Slack");
-        if (hit != null) {
-            return hit;
+        if (ua.contains("Slack/") || ua.contains("Slack_") || ua.contains("Slackbot")) {
+            return inAppBrowser("Slack", Text.versionAfter(ua, "Slack"));
         }
         if (ua.contains("Discord/")) {
             return inAppBrowser("Discord", Text.versionAfter(ua, "Discord"));
@@ -396,11 +407,27 @@ final class SoftwareDetector {
     }
 
     private static SoftwareHit product(String ua, String token, String name, String subType) {
-        String version = Text.versionAfter(ua, token);
-        if (version == null && !ua.toLowerCase(java.util.Locale.ROOT).contains(token.toLowerCase(java.util.Locale.ROOT) + "/")) {
+        if (!hasSlashToken(ua, token)) {
             return null;
         }
-        return application(name, version, subType);
+        return application(name, Text.versionAfter(ua, token), subType);
+    }
+
+    private static boolean hasSlashToken(String ua, String token) {
+        String lower = ua.toLowerCase(java.util.Locale.ROOT);
+        String needle = token.toLowerCase(java.util.Locale.ROOT) + "/";
+        int from = 0;
+        while (from < lower.length()) {
+            int at = lower.indexOf(needle, from);
+            if (at < 0) {
+                return false;
+            }
+            if (at == 0 || !Character.isLetterOrDigit(lower.charAt(at - 1))) {
+                return true;
+            }
+            from = at + 1;
+        }
+        return false;
     }
 
     private static SoftwareHit fallback(String ua) {
@@ -414,7 +441,7 @@ final class SoftwareDetector {
             return new SoftwareHit(name, Text.slug(name), Version.parse(matcher.group(2)),
                     browserShaped ? "browser" : "application",
                     browserShaped ? "web-browser" : null,
-                    null, false);
+                    null, false).asFallback();
         }
         return null;
     }

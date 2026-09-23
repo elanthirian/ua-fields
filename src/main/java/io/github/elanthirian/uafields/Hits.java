@@ -10,9 +10,15 @@ final class SoftwareHit {
     final String subType;
     final String subDescription;
     final boolean needsVersion;
+    final boolean fallback;
 
     SoftwareHit(String name, String nameCode, Version version, String type, String subType,
                 String subDescription, boolean needsVersion) {
+        this(name, nameCode, version, type, subType, subDescription, needsVersion, false);
+    }
+
+    private SoftwareHit(String name, String nameCode, Version version, String type, String subType,
+                        String subDescription, boolean needsVersion, boolean fallback) {
         this.name = name;
         this.nameCode = nameCode;
         this.version = version == null ? Version.empty() : version;
@@ -20,6 +26,7 @@ final class SoftwareHit {
         this.subType = subType;
         this.subDescription = subDescription;
         this.needsVersion = needsVersion;
+        this.fallback = fallback;
     }
 
     static SoftwareHit browser(String name, String version, String subDescription) {
@@ -27,8 +34,12 @@ final class SoftwareHit {
                 subDescription, true);
     }
 
+    SoftwareHit asFallback() {
+        return new SoftwareHit(name, nameCode, version, type, subType, subDescription, needsVersion, true);
+    }
+
     SoftwareHit renamed(String name, Version version, String type, String subType) {
-        return new SoftwareHit(name, Text.slug(name), version, type, subType, subDescription, needsVersion);
+        return new SoftwareHit(name, Text.slug(name), version, type, subType, subDescription, needsVersion, fallback);
     }
 }
 

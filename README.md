@@ -50,6 +50,10 @@ Chrome compares the first three components, except a reduced string such as `Chr
 
 A browser this catalog has never heard of still returns `software_name` and `software_version`. `is_checkable` is false. A `Sec-CH-UA` brand that is not grease and not only `Chromium` is used as the name, including brands that do not exist yet.
 
+Names this library does not special-case come from [uap-core `regexes.yaml`](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) (Apache 2.0, Copyright 2009 Google Inc.). The vendored copy is [src/main/resources/uap-core/regexes.yaml](src/main/resources/uap-core/regexes.yaml): 433 user-agent rules, 204 OS rules, and 633 device rules, byte-identical to upstream `73e7340` (2026-08-24). The runner follows uap-php replacement rules (`$1`..`$9`, empty groups become null). It matches the upstream `test_ua`, `test_os`, and `test_device` fixtures.
+
+A specific family we already named is kept when it is the same product: Chrome stays Chrome rather than `Chrome Mobile`, Safari stays Safari rather than `Mobile Safari`, Silk stays Silk rather than `Amazon Silk`. A more specific uap-core family replaces a broad label. `Coc Coc` is not reported as Chrome, `IE Mobile` is not reported as Internet Explorer, and an iPad WebKit shell with no `Version/` token becomes `Mobile Safari UI/WKWebView`. Device rules supply model names we do not map ourselves, without replacing a code name this library already resolved (for example Galaxy S24 Ultra).
+
 Replace the catalog without a code change:
 
 ```java
@@ -129,7 +133,7 @@ Apache License 2.0. The WhichBrowser strings under `corpus/whichbrowser/` are no
 {"line":1,"status":"passed","user_agent":"...","parse":{...}}
 ```
 
-`status` is `passed` when `software_name` is present, otherwise `failed`. This run: 103,473 passed, 1,288 failed, 0 exceptions. `hours_released_ago` is computed at 2026-09-23T05:15:00Z.
+`status` is `passed` when `software_name` is present, otherwise `failed`. This run, after the uap-core rules: 104,730 passed, 31 failed, 0 exceptions. `hours_released_ago` is computed at 2026-09-23T05:15:00Z.
 
 ```text
 gzip -dc corpus/whichbrowser/results.jsonl.gz | sed -n '1p'

@@ -51,12 +51,17 @@ public final class UserAgentParser {
         String raw = userAgent == null ? "" : userAgent;
         ParseOptions opts = options == null ? ParseOptions.defaults() : options;
         String sanitized = opts.sanitize() ? Sanitizer.sanitize(raw) : raw;
-        String ua = sanitized.isBlank() ? raw : sanitized;
+        String ua = raw.isBlank() ? sanitized : raw;
 
         Signals signals = Signals.inspect(raw);
         SoftwareHit software = ua.isBlank() ? null : SoftwareDetector.detect(ua);
         OsHit os = ua.isBlank() ? null : OsDetector.detect(ua);
         HardwareHit hardware = ua.isBlank() ? null : HardwareDetector.detect(ua);
+        if (!ua.isBlank()) {
+            software = UapMerge.software(software, ua);
+            os = UapMerge.os(os, ua);
+            hardware = UapMerge.hardware(hardware, ua);
+        }
         if (software != null && "bot".equals(software.type) && (!opts.allowServersToImpersonateDevices() || hardware == null)) {
             hardware = HardwareHit.server();
         }
