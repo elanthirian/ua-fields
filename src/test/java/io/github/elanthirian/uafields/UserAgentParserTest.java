@@ -45,7 +45,8 @@ class UserAgentParserTest {
         assertEquals(false, check.get("is_up_to_date"));
         assertEquals(false, check.get("is_ahead_of_catalog"));
         assertEquals(List.of("154", "0", "8037", "58"), check.get("latest_version"));
-        assertEquals(48L, check.get("hours_released_ago"));
+        assertEquals("2018-02-01", check.get("release_date"));
+        assertEquals(75768L, check.get("hours_released_ago"));
         assertFalse((Boolean) result.get("is_abusive"));
         assertFalse((Boolean) result.get("is_weird"));
     }
@@ -62,6 +63,8 @@ class UserAgentParserTest {
         Map<String, Object> check = check(result);
         assertEquals(true, check.get("is_up_to_date"));
         assertEquals(false, check.get("is_ahead_of_catalog"));
+        assertEquals("2026-09-22", check.get("release_date"));
+        assertEquals(48L, check.get("hours_released_ago"));
     }
 
     @Test
@@ -81,6 +84,8 @@ class UserAgentParserTest {
         assertEquals(List.of("500", "1", "2", "3"), result.get("software_version_full"));
         assertEquals(true, check(result).get("is_up_to_date"));
         assertEquals(true, check(result).get("is_ahead_of_catalog"));
+        assertNull(check(result).get("release_date"));
+        assertNull(check(result).get("hours_released_ago"));
     }
 
     @Test
@@ -176,6 +181,8 @@ class UserAgentParserTest {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36 Edg/153.0.3404.52");
         assertEquals("Edge", edge.get("software_name"));
         assertEquals("153", edge.get("software_version"));
+        assertEquals(List.of("153", "0", "4234", "48"), check(edge).get("latest_version"));
+        assertEquals("2026-09-20", check(edge).get("release_date"));
         assertEquals("Blink", edge.get("layout_engine_name"));
         assertEquals(true, check(edge).get("is_up_to_date"));
 
@@ -377,6 +384,22 @@ class UserAgentParserTest {
         assertEquals(true, check(result).get("is_ahead_of_catalog"));
         assertEquals(true, check(result).get("is_up_to_date"));
         assertEquals(List.of("10", "0", "0", "0"), check(result).get("latest_version"));
+    }
+
+    @Test
+    void samsungInternetUsesThePublishedAndroidRelease() {
+        ParseResult current = parser.parse(
+                "Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36");
+        assertEquals("Samsung Internet", current.get("software_name"));
+        assertEquals(true, check(current).get("is_up_to_date"));
+        assertEquals(false, check(current).get("is_ahead_of_catalog"));
+        assertEquals(List.of("25", "0", "0", "41"), check(current).get("latest_version"));
+        assertEquals("2024-05-11", check(current).get("release_date"));
+
+        ParseResult unpublished = parser.parse(
+                "Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/30.0 Chrome/121.0.0.0 Mobile Safari/537.36");
+        assertEquals(true, check(unpublished).get("is_up_to_date"));
+        assertEquals(true, check(unpublished).get("is_ahead_of_catalog"));
     }
 
     @Test

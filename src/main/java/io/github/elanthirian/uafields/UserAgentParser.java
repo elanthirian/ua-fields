@@ -171,13 +171,14 @@ public final class UserAgentParser {
         int segments = software.version.reduced() ? 1 : entry.compareSegments();
         int cmp = software.version.compareAt(entry.latest(), segments);
         boolean ahead = cmp > 0;
+        java.time.LocalDate when = entry.releasedOn(software.version);
         check.put("is_checkable", true);
         check.put("is_up_to_date", !entry.endOfLife() && cmp >= 0);
         check.put("latest_version", entry.latest().parts());
         check.put("download_url", entry.downloadUrl());
         check.put("update_url", entry.updateUrl());
-        check.put("release_date", entry.released() == null ? null : entry.released().toString());
-        check.put("hours_released_ago", hoursSince(entry.released()));
+        check.put("release_date", when == null ? null : when.toString());
+        check.put("hours_released_ago", hoursSince(when));
         check.put("is_ahead_of_catalog", ahead);
         return check;
     }

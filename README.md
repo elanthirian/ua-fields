@@ -37,7 +37,19 @@ Zero runtime dependencies. JUnit is test-scoped only.
 
 Families are recognized by stable tokens (`Chrome/`, `Edg/`, `Firefox/`, `OPR/`, `Version/` + `Safari`, bot product tokens). The version is whatever dotted number is attached. `Chrome/500.1.2.3` is Chrome 500.
 
-`version_check` compares that number with `src/main/resources/catalog/versions.txt`:
+`version_check` compares that number with the offline snapshot in [src/main/resources/catalog/versions.txt](src/main/resources/catalog/versions.txt). That file is the right runtime catalog: parsing does not call the network, and the compare rule, download URL, and end-of-life flag are not fields the vendors publish. The numbers in it are not typed by hand. They are a snapshot of the official release feeds, taken 2026-09-23:
+
+| Browser | Latest in the snapshot | Source |
+| --- | --- | --- |
+| Chrome | 154.0.8037.58 (2026-09-22) | [Chrome version history](https://versionhistory.googleapis.com/v1/chrome/platforms/win/channels/stable/versions), Windows stable |
+| Firefox | 156.0.1 (2026-09-22) | [firefox_versions.json](https://product-details.mozilla.org/1.0/firefox_versions.json) and [firefox_history_stability_releases.json](https://product-details.mozilla.org/1.0/firefox_history_stability_releases.json) |
+| Edge | 153.0.4234.48 (2026-09-20) | [edgeupdates.microsoft.com/api/products](https://edgeupdates.microsoft.com/api/products), Stable / Windows. That API publishes the current build, not the archive |
+| Opera | 136.0.6008.22 (2026-09-17) | [Opera desktop archive](https://get.geo.opera.com/pub/opera/desktop/) |
+| Samsung Internet | 25.0.0.41 (2024-05-11) | [Samsung Internet for Android release notes](https://developer.samsung.com/browser/release-note/android-release-note.html). Samsung Browser for Windows is a different product and is not this row |
+| Safari | 27 | [Safari release notes](https://developer.apple.com/documentation/safari-release-notes). Apple lists the versions and does not publish a release date there, so the date column is empty |
+| Internet Explorer | 11.0 (2013-10-17), eol | [IE 11 lifecycle](https://learn.microsoft.com/en-us/lifecycle/products/internet-explorer-11). Support ended 2022-06-15 |
+
+The matching history files are under [src/main/resources/catalog/history/](src/main/resources/catalog/history/). Chrome Windows stable is every version the history API still lists (54 through 154). Firefox is Mozilla's stability-release map. Opera is every desktop build in the public archive, including channel builds. `CatalogRefresh` rewrites the snapshot and those files from the same URLs.
 
 | Situation | `is_up_to_date` | `is_ahead_of_catalog` |
 | --- | --- | --- |
@@ -46,7 +58,9 @@ Families are recognized by stable tokens (`Chrome/`, `Edg/`, `Firefox/`, `OPR/`,
 | Newer than the catalog | true | true |
 | Product line marked `eol` (Internet Explorer) | false | false if it is not newer |
 
-Chrome compares the first three components, except a reduced string such as `Chrome/154.0.0.0` (major followed only by zeros). Those are compared on the major only, because the UA no longer carries the real build. Firefox, Safari, Edge, Opera, and Samsung Internet compare the major. Edge's catalog entry is the stable major (153 on 2026-09-20); the full Edge build is not published in this file.
+Chrome compares the first three components, except a reduced string such as `Chrome/154.0.0.0` (major followed only by zeros). Those are compared on the major only, because the UA no longer carries the real build. Firefox, Safari, Edge, Opera, and Samsung Internet compare the major. Edge and Opera still store the full official build; a reduced or same-major UA stays current.
+
+`release_date` and `hours_released_ago` are for the detected build when that build is in the history. A reduced UA of the current major uses the latest build's date. A version the history does not contain, including one ahead of the catalog, leaves both null.
 
 A browser this catalog has never heard of still returns `software_name` and `software_version`. `is_checkable` is false. A `Sec-CH-UA` brand that is not grease and not only `Chromium` is used as the name, including brands that do not exist yet.
 
@@ -67,7 +81,7 @@ id|latest|released|download|update|compareSegments|eol|aliases
 chrome|154.0.8037.58|2026-09-22|https://www.google.com/chrome/|https://support.google.com/chrome/answer/95414|3|false|chrome,headless-chrome,chrome-webview,chromium
 ```
 
-The bundled snapshot is dated 2026-09-23.
+The bundled snapshot is dated 2026-09-23. Replace `versions.txt` when you want a different "latest". Leave `catalog/history/` in place if you still want per-build dates.
 
 ## Fields
 
@@ -110,8 +124,8 @@ Every parse returns these keys. Unknown values are null. Lists and maps are empt
 - It is not a database of tens of thousands of device models. Unknown model codes still return the code and, when the prefix is known, the vendor.
 - Brave that sends only a Chrome token is reported as Chrome. Brave is recognized when the UA contains `Brave`.
 - A frozen `Windows NT 10.0` UA is Windows 10 until a build `>= 22000` is present or `Sec-CH-UA-Platform-Version` has major `>= 13` (Windows 11).
-- Per-build release dates for every historical Chrome are not stored. `hours_released_ago` is the age of the catalog's latest release.
-- There is no network call. Currency of "latest" is the catalog file you ship.
+- Per-build dates exist only for builds the official history file lists. Chrome's feed currently starts at 54. Edge's update API does not publish the old archive. Safari versions are listed without dates.
+- There is no network call during parse. Currency of "latest" is the catalog snapshot you ship. `java -cp target/classes io.github.elanthirian.uafields.CatalogRefresh` rewrites it from the vendor feeds.
 
 ## Build
 
