@@ -1,0 +1,15 @@
+# Latest stable versions known to this release.
+# Format (8 pipe-separated columns):
+#   id|latest|released|download|update|compareSegments|eol|aliases
+# compareSegments: how many numeric components decide "up to date".
+# A reduced UA (major followed by zeros, e.g. Chrome/154.0.0.0) is compared on the major only.
+# eol=true: the product line is finished, so is_up_to_date is always false.
+# Aliases are software_name_code values. Update this file; do not hard-code versions in Java.
+# Snapshot date: 2026-09-23
+chrome|154.0.8037.58|2026-09-22|https://www.google.com/chrome/|https://support.google.com/chrome/answer/95414|3|false|chrome,headless-chrome,chrome-webview,chromium
+firefox|156.0.1|2026-09-22|https://www.mozilla.org/firefox/new/|https://support.mozilla.org/kb/update-firefox-latest-release|1|false|firefox
+safari|27.0|2026-09-14|https://www.apple.com/safari/|https://support.apple.com/HT204416|1|false|safari
+edge|153|2026-09-20|https://www.microsoft.com/edge|https://support.microsoft.com/microsoft-edge|1|false|edge
+opera|136|2026-09-17|https://www.opera.com/download|https://help.opera.com/latest/security-and-privacy/|1|false|opera
+samsung-internet|30.0|2026-05-11|https://galaxystore.samsung.com/detail/com.sec.android.app.sbrowser||1|false|samsung-internet
+internet-explorer|11.0|2022-06-15|||1|true|internet-explorer
