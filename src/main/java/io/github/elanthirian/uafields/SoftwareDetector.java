@@ -85,6 +85,10 @@ final class SoftwareDetector {
         if (hit != null) {
             return hit;
         }
+        hit = iam(ua);
+        if (hit != null) {
+            return hit;
+        }
         hit = inApp(ua);
         if (hit != null) {
             return hit;
@@ -360,6 +364,10 @@ final class SoftwareDetector {
         if (hit != null) {
             return hit;
         }
+        hit = product(ua, "python-urllib3", "Python urllib3", "software-library");
+        if (hit != null) {
+            return hit;
+        }
         hit = product(ua, "Python-urllib", "Python urllib", "software-library");
         if (hit != null) {
             return hit;
@@ -388,6 +396,9 @@ final class SoftwareDetector {
         if (hit != null) {
             return hit;
         }
+        if ("node".equals(ua) || hasSlashToken(ua, "node")) {
+            return application("Node.js", Text.versionAfter(ua, "node"), "software-library");
+        }
         if (ua.contains("libwww-perl")) {
             return application("libwww-perl", null, "software-library");
         }
@@ -403,7 +414,49 @@ final class SoftwareDetector {
         if (hit != null) {
             return hit;
         }
-        return product(ua, "Java", "Java", "software-library");
+        hit = product(ua, "Java-http-client", "Java HTTP Client", "software-library");
+        if (hit != null) {
+            return hit;
+        }
+        return javaRuntime(ua);
+    }
+
+    private static SoftwareHit iam(String ua) {
+        IamSdk.App app = IamSdk.match(ua);
+        if (app == null) {
+            return null;
+        }
+        return application(IamSdk.appName(app.bundle()), app.appVersion(), "mobile-app");
+    }
+
+    private static SoftwareHit javaRuntime(String ua) {
+        if (!hasSlashToken(ua, "Java")) {
+            return null;
+        }
+        return application("Java", javaVersion(ua), "software-library");
+    }
+
+    /** Java update builds use an underscore (1.8.0_191). */
+    private static String javaVersion(String ua) {
+        String lower = ua.toLowerCase(java.util.Locale.ROOT);
+        int at = lower.indexOf("java/");
+        if (at < 0) {
+            return null;
+        }
+        int start = at + "java/".length();
+        int i = start;
+        while (i < ua.length()) {
+            char c = ua.charAt(i);
+            if ((c >= '0' && c <= '9') || c == '.' || c == '_') {
+                i++;
+            } else {
+                break;
+            }
+        }
+        if (i == start) {
+            return null;
+        }
+        return ua.substring(start, i).replace('_', '.');
     }
 
     private static SoftwareHit product(String ua, String token, String name, String subType) {
@@ -422,12 +475,16 @@ final class SoftwareDetector {
             if (at < 0) {
                 return false;
             }
-            if (at == 0 || !Character.isLetterOrDigit(lower.charAt(at - 1))) {
+            if (at == 0 || !isProductChar(lower.charAt(at - 1))) {
                 return true;
             }
             from = at + 1;
         }
         return false;
+    }
+
+    private static boolean isProductChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '-' || c == '_' || c == '.';
     }
 
     private static SoftwareHit fallback(String ua) {

@@ -650,6 +650,123 @@ class UserAgentParserTest {
     }
 
     @Test
+    void httpClientsAndIamSdkApps() {
+        ParseResult javaHttp = parser.parse("Java-http-client/11-ea");
+        assertEquals("Java HTTP Client", javaHttp.get("software_name"));
+        assertEquals("11", javaHttp.get("software_version"));
+        assertEquals("software-library", javaHttp.get("software_sub_type"));
+        assertNull(javaHttp.get("hardware_type"));
+
+        ParseResult java8 = parser.parse("Java/1.8.0_191");
+        assertEquals("Java", java8.get("software_name"));
+        assertEquals(List.of("1", "8", "0", "191"), java8.get("software_version_full"));
+        assertEquals("software-library", java8.get("software_sub_type"));
+        assertNull(java8.get("hardware_type"));
+
+        ParseResult apache = parser.parse("Apache-HttpClient/4.5.8 (Java/1.8.0_191)");
+        assertEquals("Apache HttpClient", apache.get("software_name"));
+        assertEquals(List.of("4", "5", "8"), apache.get("software_version_full"));
+        assertEquals("application", apache.get("software_type"));
+        assertEquals("software-library", apache.get("software_sub_type"));
+        assertEquals("1.8.0_191", dict(apache).get("Java runtime"));
+        assertNull(apache.get("hardware_type"));
+
+        ParseResult requests = parser.parse("python-requests/2.32.3");
+        assertEquals("Python Requests", requests.get("software_name"));
+        assertEquals(List.of("2", "32", "3"), requests.get("software_version_full"));
+
+        ParseResult urllib = parser.parse("Python-urllib/3.10");
+        assertEquals("Python urllib", urllib.get("software_name"));
+        assertEquals("software-library", urllib.get("software_sub_type"));
+        assertEquals("application", urllib.get("software_type"));
+        assertNull(urllib.get("hardware_type"));
+
+        ParseResult urllib3 = parser.parse("python-urllib3/1.26.7");
+        assertEquals("Python urllib3", urllib3.get("software_name"));
+        assertEquals(List.of("1", "26", "7"), urllib3.get("software_version_full"));
+        assertEquals("software-library", urllib3.get("software_sub_type"));
+        assertNull(urllib3.get("hardware_type"));
+
+        ParseResult node = parser.parse("node");
+        assertEquals("Node.js", node.get("software_name"));
+        assertEquals("software-library", node.get("software_sub_type"));
+        assertNull(node.get("software_version"));
+
+        ParseResult curl = parser.parse("curl/7.81.0");
+        assertEquals("curl", curl.get("software_name"));
+        assertEquals(List.of("7", "81", "0"), curl.get("software_version_full"));
+        assertEquals("tool", curl.get("software_sub_type"));
+
+        ParseResult go = parser.parse("Go-http-client/1.1");
+        assertEquals("Go HTTP Client", go.get("software_name"));
+        assertEquals(List.of("1", "1"), go.get("software_version_full"));
+        assertEquals("software-library", go.get("software_sub_type"));
+        assertEquals("application", go.get("software_type"));
+
+        ParseResult bare = parser.parse("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+        assertNull(bare.get("software_name"));
+        assertEquals("Windows 10", bare.get("operating_system"));
+        assertEquals("computer", bare.get("hardware_type"));
+
+        ParseResult fold = parser.parse(
+                "Z_IAMSDK/2.1.6-beta7 (; Native) com.aratai.chat/1.46.4 (1875) Android/34 (Samsung; SM-F956B; hu-HU)");
+        assertEquals("Arattai", fold.get("software_name"));
+        assertEquals(List.of("1", "46", "4"), fold.get("software_version_full"));
+        assertEquals("mobile-app", fold.get("software_sub_type"));
+        assertEquals("Android 14", fold.get("operating_system"));
+        assertEquals("14", fold.get("operating_system_version"));
+        assertEquals("phone", fold.get("hardware_sub_type"));
+        assertEquals("Samsung", fold.get("operating_platform_vendor_name"));
+        assertEquals("SM-F956B", fold.get("operating_platform_code"));
+        assertEquals("Galaxy Z Fold6", fold.get("operating_platform_code_name"));
+        assertEquals("com.aratai.chat", dict(fold).get("Bundle"));
+        assertEquals("1875", dict(fold).get("App build"));
+        assertEquals("2.1.6-beta7", dict(fold).get("IAM SDK"));
+        assertEquals("hu-HU", dict(fold).get("Locale"));
+
+        ParseResult onePlus = parser.parse(
+                "Z_IAMSDK/2.1.6-beta7 (; Native) com.aratai.chat/1.46.4 (1875) Android/31 (OnePlus; LE2111; pl-PL)");
+        assertEquals("Android 12", onePlus.get("operating_system"));
+        assertEquals(true, os(onePlus).get("is_end_of_life"));
+        assertEquals("phone", onePlus.get("hardware_sub_type"));
+        assertEquals("OnePlus", onePlus.get("operating_platform_vendor_name"));
+        assertEquals("LE2111", onePlus.get("operating_platform_code"));
+        assertEquals("OnePlus 9", onePlus.get("operating_platform_code_name"));
+
+        ParseResult galaxy = parser.parse(
+                "Z_IAMSDK/2.1.6-beta7 (; Native) com.aratai.chat/1.46.4 (1875) Android/33 (Samsung; SM-A546B; fi-FI)");
+        assertEquals("Android 13", galaxy.get("operating_system"));
+        assertEquals(true, os(galaxy).get("is_end_of_life"));
+        assertEquals("Galaxy A54", galaxy.get("operating_platform_code_name"));
+        assertEquals("phone", galaxy.get("hardware_sub_type"));
+
+        ParseResult iphone = parser.parse(
+                "Z_IAMSDK/1.6.11 (Native; 1.6.11) com.zoho.arattai/1.17.65.1.17.65.27 (1.17.65.27) iOS/26.6.2 (Apple iPhone17%2C3)");
+        assertEquals("Arattai", iphone.get("software_name"));
+        assertEquals(List.of("1", "17", "65", "1", "17", "65", "27"), iphone.get("software_version_full"));
+        assertEquals("iOS 26.6.2", iphone.get("operating_system"));
+        assertEquals("phone", iphone.get("hardware_sub_type"));
+        assertEquals("iPhone17,3", iphone.get("operating_platform_code"));
+        assertEquals("iPhone 16", iphone.get("operating_platform_code_name"));
+        assertEquals("com.zoho.arattai", dict(iphone).get("Bundle"));
+        assertEquals(true, os(iphone).get("is_outdated"));
+        assertEquals(false, os(iphone).get("is_end_of_life"));
+
+        ParseResult redmi = parser.parse(
+                "Z_IAMSDK/2.2.1 (Native; beta1) com.aratai.chat/1.53.0 (1945) Android/34 (Xiaomi; 2411DRN47I; en-IN)");
+        assertEquals("Arattai", redmi.get("software_name"));
+        assertEquals("1", redmi.get("software_version"));
+        assertEquals(List.of("1", "53", "0"), redmi.get("software_version_full"));
+        assertEquals("Android 14", redmi.get("operating_system"));
+        assertEquals("Xiaomi", redmi.get("operating_platform_vendor_name"));
+        assertEquals("2411DRN47I", redmi.get("operating_platform_code"));
+        assertEquals("Redmi 14C 5G", redmi.get("operating_platform_code_name"));
+        assertEquals("phone", redmi.get("hardware_sub_type"));
+        assertEquals("2.2.1", dict(redmi).get("IAM SDK"));
+        assertEquals("en-IN", dict(redmi).get("Locale"));
+    }
+
+    @Test
     void versionCompareTreatsMissingComponentsAsZero() {
         assertTrue(Version.parse("154.0.8037").compareAt(Version.parse("154.0.8037.58"), 3) == 0);
         assertTrue(Version.parse("9.8.1").compareAt(Version.parse("9.8"), 0) > 0);

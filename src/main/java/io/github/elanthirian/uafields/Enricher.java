@@ -49,6 +49,19 @@ final class Enricher {
         if (arch != null) {
             dict.put("Architecture", arch);
         }
+        IamSdk.App sdk = IamSdk.match(ua);
+        if (sdk != null) {
+            dict.put("Bundle", sdk.bundle());
+            dict.put("App build", sdk.build());
+            dict.put("IAM SDK", sdk.sdk());
+            if (sdk.locale() != null) {
+                dict.put("Locale", sdk.locale());
+            }
+        }
+        Matcher javaRuntime = Pattern.compile("\\(Java/([0-9][0-9._]*)\\)").matcher(ua);
+        if (javaRuntime.find()) {
+            dict.put("Java runtime", javaRuntime.group(1));
+        }
         List<String> notes = new ArrayList<>();
         if (ua.contains("Tablet PC")) {
             notes.add("Tablet PC");

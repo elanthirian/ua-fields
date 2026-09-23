@@ -15,6 +15,13 @@ final class OsDetector {
     }
 
     static OsHit detect(String ua) {
+        IamSdk.App sdk = IamSdk.match(ua);
+        if (sdk != null) {
+            OsHit fromSdk = fromSdk(sdk);
+            if (fromSdk != null) {
+                return fromSdk;
+            }
+        }
         if (ua.contains("watchOS") || ua.contains("Watch OS")) {
             String version = Text.group(Pattern.compile("(?:watchOS|Watch OS)[/ ](\\d+(?:[_.]\\d+)*)"), ua);
             version = version == null ? null : version.replace('_', '.');
@@ -92,6 +99,26 @@ final class OsDetector {
             return new OsHit("PlayStation", generation, generation == null ? List.of() : List.of(generation), null, display, List.of());
         }
         return linux(ua);
+    }
+
+    private static OsHit fromSdk(IamSdk.App sdk) {
+        if ("Android".equals(sdk.osName())) {
+            int api = Version.parse(sdk.osVersion()).majorNumber();
+            String release = IamSdk.androidRelease(api);
+            if (release == null) {
+                return null;
+            }
+            return android(release);
+        }
+        if ("iOS".equals(sdk.osName())) {
+            Version version = Version.parse(sdk.osVersion());
+            if (version.isEmpty()) {
+                return null;
+            }
+            Integer patch = version.parts().size() > 2 ? version.component(2) : null;
+            return ios(version.majorNumber(), version.component(1), patch, false);
+        }
+        return null;
     }
 
     static OsHit mac(int major, int minor, Integer patch) {

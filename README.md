@@ -101,7 +101,7 @@ Every parse returns these keys. Unknown values are null. Lists and maps are empt
 | `software` / `software_name` / `software_name_code` | Label, name, and slug |
 | `software_version` / `software_version_full` | Major, and every component |
 | `software_type` | `browser`, `bot`, `application` |
-| `software_sub_type` | `web-browser`, `in-app-browser`, `crawler`, `ai-crawler`, `ai-agent`, `analyser`, `security-analyser`, `site-monitor`, `feed-fetcher`, `tool`, `software-library`, `email-client` |
+| `software_sub_type` | `web-browser`, `in-app-browser`, `mobile-app`, `crawler`, `ai-crawler`, `ai-agent`, `analyser`, `security-analyser`, `site-monitor`, `feed-fetcher`, `tool`, `software-library`, `email-client` |
 | `operating_system` / `operating_system_name` / `operating_system_name_code` | Display line, name, slug |
 | `operating_system_version` / `operating_system_version_full` | Codename when one is real (`Mavericks`, `Catalina`, `Tahoe`), otherwise the number. Unknown future macOS majors are not given a made-up codename |
 | `operating_system_flavour` / `operating_system_flavour_code` | Ubuntu, Debian, Fedora, and the other Linux flavours that put their name in the UA |
@@ -151,6 +151,8 @@ Linux and the other names below are recognized. They are not in [os.txt](src/mai
 | Wear OS | Not a detected operating-system name | A watch browser string is Android, or sometimes Tizen. Nothing looks for `Wear OS`, so a catalog row would not match. Apple `watchOS` is parsed with a version and is also absent from the support table |
 
 There is no CVE list. An old browser is not marked `is_abusive`, and it is not reclassified as a bot.
+
+HTTP libraries stay `software-library` or `tool` (`Java HTTP Client`, `Java` with the `_` update build, `Apache HttpClient`, `Python Requests`, `Python urllib`, `Python urllib3`, `Node.js`, `curl`, `Go HTTP Client`). A uap-core "Spider" device match is not reported as hardware. `Z_IAMSDK` is the Zoho IAM native client: the product is the app id (`com.aratai.chat` and `com.zoho.arattai` are Arattai), `Android/34` is API 34 (Android 14, not Android 34), and the parenthetical vendor, model, and locale are the device. A bare `Mozilla/5.0 (Windows NT 10.0; Win64; x64)` is Windows 10 with no browser, which is what that string says.
 
 ## What v0.1 does not claim
 

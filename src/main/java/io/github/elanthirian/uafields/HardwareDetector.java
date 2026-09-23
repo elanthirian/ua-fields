@@ -24,7 +24,10 @@ final class HardwareDetector {
             Map.entry("SM-S938B", "Galaxy S25 Ultra"),
             Map.entry("SM-A546B", "Galaxy A54"),
             Map.entry("SM-F946B", "Galaxy Z Fold5"),
+            Map.entry("SM-F956B", "Galaxy Z Fold6"),
             Map.entry("SM-F741B", "Galaxy Z Flip6"),
+            Map.entry("LE2111", "OnePlus 9"),
+            Map.entry("2411DRN47I", "Redmi 14C 5G"),
             Map.entry("Pixel 8", "Pixel 8"),
             Map.entry("Pixel 8 Pro", "Pixel 8 Pro"),
             Map.entry("Pixel 9", "Pixel 9"),
@@ -34,6 +37,10 @@ final class HardwareDetector {
     }
 
     static HardwareHit detect(String ua) {
+        HardwareHit sdk = iamDevice(ua);
+        if (sdk != null) {
+            return sdk;
+        }
         if (ua.contains("Vision Pro") || ua.contains("visionOS")) {
             return device("mobile", "wearable", "vr", "Apple", "Vision Pro", "Vision Pro", "Apple Vision Pro");
         }
@@ -84,6 +91,44 @@ final class HardwareDetector {
             return device("computer", null, null, null, null, null, null);
         }
         return null;
+    }
+
+    private static HardwareHit iamDevice(String ua) {
+        IamSdk.App app = IamSdk.match(ua);
+        if (app == null || app.model() == null) {
+            return null;
+        }
+        if ("Apple".equalsIgnoreCase(app.vendor()) && app.model().startsWith("iPhone")) {
+            String codeName = iphoneName(app.model());
+            String platform = codeName == null ? "Apple " + app.model() : "Apple " + codeName + " (" + app.model() + ")";
+            return device("mobile", "phone", null, "Apple", app.model(), codeName, platform);
+        }
+        HardwareHit described = fromModel(app.model(), device("mobile", "phone", null, app.vendor(), app.model(), null, null));
+        String vendor = described.vendor != null ? described.vendor : app.vendor();
+        String codeName = described.codeName;
+        String platform;
+        if (codeName != null && vendor != null && codeName.toLowerCase(Locale.ROOT).startsWith(vendor.toLowerCase(Locale.ROOT))) {
+            platform = codeName + " (" + app.model() + ")";
+        } else if (codeName != null && vendor != null) {
+            platform = vendor + " " + codeName + " (" + app.model() + ")";
+        } else if (vendor != null) {
+            platform = vendor + " " + app.model();
+        } else {
+            platform = described.platform;
+        }
+        String sub = described.subType == null ? "phone" : described.subType;
+        return device("mobile", sub, null, vendor, app.model(), codeName, platform);
+    }
+
+    private static String iphoneName(String identifier) {
+        return switch (identifier) {
+            case "iPhone17,1" -> "iPhone 16 Pro";
+            case "iPhone17,2" -> "iPhone 16 Pro Max";
+            case "iPhone17,3" -> "iPhone 16";
+            case "iPhone17,4" -> "iPhone 16 Plus";
+            case "iPhone17,5" -> "iPhone 16e";
+            default -> null;
+        };
     }
 
     static HardwareHit fromModel(String model, HardwareHit current) {

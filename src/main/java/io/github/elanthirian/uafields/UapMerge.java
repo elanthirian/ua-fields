@@ -25,6 +25,9 @@ final class UapMerge {
         if (current == null || current.fallback) {
             return fromAgent(agent, current);
         }
+        if ("application".equals(current.type)) {
+            return current;
+        }
         if (equivalent(current.name, agent.family()) || genericFamily(agent.family())) {
             return current;
         }
@@ -62,7 +65,7 @@ final class UapMerge {
             return current;
         }
         if (!specificDevice(device)) {
-            return current != null ? current : fromDevice(device, null);
+            return current;
         }
         return fromDevice(device, current);
     }
