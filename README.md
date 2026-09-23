@@ -117,4 +117,21 @@ Java 17+.
 mvn test
 ```
 
-Apache License 2.0.
+Apache License 2.0. The WhichBrowser strings under `corpus/whichbrowser/` are not part of that license. See [corpus/whichbrowser/SOURCE.txt](corpus/whichbrowser/SOURCE.txt).
+
+## Corpus report
+
+[corpus/whichbrowser/useragents.txt](corpus/whichbrowser/useragents.txt) is the public WhichBrowser list (104,761 lines, fetched 2026-09-23).
+
+[corpus/whichbrowser/results.jsonl.gz](corpus/whichbrowser/results.jsonl.gz) is the full row-level report. Each line is one JSON object with the input and every parse field:
+
+```text
+{"line":1,"status":"passed","user_agent":"...","parse":{...}}
+```
+
+`status` is `passed` when `software_name` is present, otherwise `failed`. This run: 103,473 passed, 1,288 failed, 0 exceptions. `hours_released_ago` is computed at 2026-09-23T05:15:00Z.
+
+```text
+gzip -dc corpus/whichbrowser/results.jsonl.gz | sed -n '1p'
+```
+

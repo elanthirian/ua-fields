@@ -1,0 +1,22 @@
+Input
+  useragents.txt
+  https://whichbrowser.net/data/useragents.txt
+  Fetched 2026-09-23. One user agent per line. 104761 lines.
+  These strings come from the WhichBrowser public corpus. They are not covered by the Apache license on this repository.
+
+Output
+  results.jsonl.gz
+  One JSON object per input line, same order.
+  Fields: line, status, user_agent (the input row), parse (every ua-fields field).
+  status is "passed" when parse.software_name is present, otherwise "failed".
+  Parser: io.github.elanthirian:ua-fields:0.1.0
+  version_check.hours_released_ago uses a fixed clock of 2026-09-23T05:15:00Z.
+
+Result
+  lines: 104761
+  passed: 103473
+  failed: 1288
+  exceptions: 0
+
+Read a row:
+  gzip -dc corpus/whichbrowser/results.jsonl.gz | sed -n '1p'
