@@ -1,0 +1,90 @@
+# Operating-system support snapshot, 2026-09-23. The parser does not call the network.
+# CatalogRefresh does not rewrite this file.
+#
+# family|names|version|rank|released|support_end
+# names: operating_system_name_code values that use the row (comma-separated).
+# rank: release order inside the family, not the marketing number. macOS and iOS
+#       jumped from 15/18 to 26, so those are one step, not eleven.
+# released: day that version launched. Used by the age rule in catalog/freshness.txt.
+# support_end: last day of security support. Empty means security support was still
+#       open on the snapshot. A row is end of life when the parse date is on or after
+#       this day. Feature updates may have stopped earlier; that is "outdated", not EOL.
+#       A major older than every row of the family is end of life as well.
+#
+# Windows feature updates are Home and Pro dates. Enterprise and LTSC run longer;
+# a user agent cannot show the edition. Windows 10 reached end of support on
+# 2025-10-14. Consumer Extended Security Updates are not treated as a current release.
+# Windows 11 with no OS build is not scored (the frozen NT 10.0 token does not say
+# 24H2 from 26H1).
+#
+# Sources:
+#   https://learn.microsoft.com/en-us/windows/release-health/supported-versions-windows-client
+#   https://learn.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro
+#   https://learn.microsoft.com/en-us/lifecycle/products/windows-7
+#   https://learn.microsoft.com/en-us/lifecycle/products/windows-81
+#   https://endoflife.date/android
+#   https://source.android.com/docs/security/bulletin/2026/2026-09-01
+#   https://endoflife.date/macos
+#   https://endoflife.date/ios
+#   https://learn.microsoft.com/en-us/lifecycle/announcements/windows-10-mobile-end-of-support
+windows|windows|2000|1|2000-02-17|2010-07-13
+windows|windows|xp|2|2001-10-25|2014-04-08
+windows|windows|vista|3|2007-01-30|2017-04-11
+windows|windows|7|4|2009-10-22|2020-01-14
+windows|windows|8|5|2012-10-26|2016-01-12
+windows|windows|8.1|6|2013-10-17|2023-01-10
+windows|windows|10|7|2015-07-29|2025-10-14
+windows|windows|11-21H2|8|2021-10-04|2023-10-11
+windows|windows|11-22H2|9|2022-09-20|2024-10-09
+windows|windows|11-23H2|10|2023-10-31|2025-11-12
+windows|windows|11-24H2|11|2024-10-01|2026-10-13
+windows|windows|11-25H2|12|2025-09-30|2027-10-12
+windows|windows|11-26H1|13|2026-02-10|2028-03-14
+android|android|10|10|2019-09-03|2023-03-06
+android|android|11|11|2020-09-08|2024-02-05
+android|android|12|12|2021-10-04|2025-03-03
+android|android|13|13|2022-08-15|2026-03-02
+android|android|14|14|2023-10-04|
+android|android|15|15|2024-09-03|
+android|android|16|16|2025-06-10|
+android|android|17|17|2026-06-16|
+ios|ios,ipados|5|5|2011-10-12|2012-11-01
+ios|ios,ipados|6|6|2012-09-19|2013-09-26
+ios|ios,ipados|7|7|2013-09-18|2014-10-20
+ios|ios,ipados|8|8|2014-09-17|2015-09-30
+ios|ios,ipados|9|9|2015-09-16|2019-07-22
+ios|ios,ipados|10|10|2016-09-13|2019-07-22
+ios|ios,ipados|11|11|2017-09-19|2018-10-08
+ios|ios,ipados|12|12|2018-09-17|2026-01-26
+ios|ios,ipados|13|13|2019-09-19|2020-09-16
+ios|ios,ipados|14|14|2020-09-16|2021-10-26
+ios|ios,ipados|15|15|2021-09-20|
+ios|ios,ipados|16|16|2022-09-12|
+ios|ios,ipados|17|17|2023-09-18|2025-05-13
+ios|ios,ipados|18|18|2024-09-16|
+ios|ios,ipados|26|19|2025-09-15|
+ios|ios,ipados|27|20|2026-09-14|
+macos|macos,mac-os-x|10.0|1|2001-03-24|2001-06-22
+macos|macos,mac-os-x|10.1|2|2001-09-25|2002-06-06
+macos|macos,mac-os-x|10.2|3|2002-08-24|2003-10-03
+macos|macos,mac-os-x|10.3|4|2003-10-24|2005-04-15
+macos|macos,mac-os-x|10.4|5|2005-04-29|2007-11-14
+macos|macos,mac-os-x|10.5|6|2007-10-26|2009-08-13
+macos|macos,mac-os-x|10.6|7|2009-08-28|2011-07-25
+macos|macos,mac-os-x|10.7|8|2011-07-20|2012-10-04
+macos|macos,mac-os-x|10.8|9|2012-07-25|2015-08-13
+macos|macos,mac-os-x|10.9|10|2013-10-22|2016-12-01
+macos|macos,mac-os-x|10.10|11|2014-10-16|2017-08-01
+macos|macos,mac-os-x|10.11|12|2015-09-30|2018-12-01
+macos|macos,mac-os-x|10.12|13|2016-09-20|2019-10-01
+macos|macos,mac-os-x|10.13|14|2017-09-25|2020-12-01
+macos|macos,mac-os-x|10.14|15|2018-09-24|2021-10-25
+macos|macos,mac-os-x|10.15|16|2019-10-07|2026-02-02
+macos|macos,mac-os-x|11|17|2020-11-12|2026-02-02
+macos|macos,mac-os-x|12|18|2021-10-25|2024-09-16
+macos|macos,mac-os-x|13|19|2022-10-24|2025-09-15
+macos|macos,mac-os-x|14|20|2023-09-26|2026-09-14
+macos|macos,mac-os-x|15|21|2024-09-16|
+macos|macos,mac-os-x|26|22|2025-09-15|
+macos|macos,mac-os-x|27|23|2026-09-14|
+windows-phone|windows-phone|*|1|2010-10-21|2019-12-10

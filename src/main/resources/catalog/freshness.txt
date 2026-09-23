@@ -1,0 +1,6 @@
+# How far behind "latest" still counts as fresh. The parser does not call the network.
+# major_gap: outdated when this many or more releases are newer (browser majors, or the OS rank column).
+# age_months: outdated when the detected release date is this many calendar months old, or older.
+# A missing release date does not satisfy the age rule. End of life is a separate flag.
+major_gap|5
+age_months|5

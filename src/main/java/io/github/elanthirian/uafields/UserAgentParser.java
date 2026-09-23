@@ -1,6 +1,7 @@
 package io.github.elanthirian.uafields;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -20,23 +21,27 @@ public final class UserAgentParser {
     private static final Pattern GREASE = Pattern.compile("(?i)not.?a.?brand");
 
     private final VersionCatalog catalog;
+    private final OsCatalog osCatalog;
+    private final Freshness freshness;
     private final Clock clock;
 
-    private UserAgentParser(VersionCatalog catalog, Clock clock) {
+    private UserAgentParser(VersionCatalog catalog, OsCatalog osCatalog, Freshness freshness, Clock clock) {
         this.catalog = catalog;
+        this.osCatalog = osCatalog;
+        this.freshness = freshness;
         this.clock = clock;
     }
 
     public static UserAgentParser create() {
-        return new UserAgentParser(VersionCatalog.bundled(), Clock.systemUTC());
+        return new UserAgentParser(VersionCatalog.bundled(), OsCatalog.bundled(), Freshness.bundled(), Clock.systemUTC());
     }
 
     public static UserAgentParser withCatalog(java.nio.file.Path path) {
-        return new UserAgentParser(VersionCatalog.load(path), Clock.systemUTC());
+        return new UserAgentParser(VersionCatalog.load(path), OsCatalog.bundled(), Freshness.bundled(), Clock.systemUTC());
     }
 
     public UserAgentParser withClock(Clock clock) {
-        return new UserAgentParser(catalog, clock);
+        return new UserAgentParser(catalog, osCatalog, freshness, clock);
     }
 
     public ParseResult parse(String userAgent) {
@@ -151,6 +156,7 @@ public final class UserAgentParser {
         fields.put("is_restricted", signals.restricted);
         fields.put("is_spam", signals.spam);
         fields.put("version_check", versionCheck(software));
+        fields.put("operating_system_support", osCatalog.support(os, today(), freshness));
         return fields;
     }
 
@@ -166,21 +172,36 @@ public final class UserAgentParser {
             check.put("release_date", null);
             check.put("hours_released_ago", null);
             check.put("is_ahead_of_catalog", false);
+            check.put("is_outdated", null);
+            check.put("is_end_of_life", null);
+            check.put("versions_behind", null);
+            check.put("outdated_reason", null);
             return check;
         }
         int segments = software.version.reduced() ? 1 : entry.compareSegments();
         int cmp = software.version.compareAt(entry.latest(), segments);
         boolean ahead = cmp > 0;
         java.time.LocalDate when = entry.releasedOn(software.version);
+        int behind = ahead ? 0 : Math.max(0, entry.latest().majorNumber() - software.version.majorNumber());
+        boolean endOfLife = entry.endOfLife();
+        String reason = endOfLife ? null : freshness.reason(behind, when, today());
         check.put("is_checkable", true);
-        check.put("is_up_to_date", !entry.endOfLife() && cmp >= 0);
+        check.put("is_up_to_date", !endOfLife && cmp >= 0);
         check.put("latest_version", entry.latest().parts());
         check.put("download_url", entry.downloadUrl());
         check.put("update_url", entry.updateUrl());
         check.put("release_date", when == null ? null : when.toString());
         check.put("hours_released_ago", hoursSince(when));
         check.put("is_ahead_of_catalog", ahead);
+        check.put("is_outdated", reason != null);
+        check.put("is_end_of_life", endOfLife);
+        check.put("versions_behind", behind);
+        check.put("outdated_reason", reason);
         return check;
+    }
+
+    private LocalDate today() {
+        return LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
     }
 
     private Long hoursSince(java.time.LocalDate released) {

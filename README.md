@@ -51,14 +51,18 @@ Families are recognized by stable tokens (`Chrome/`, `Edg/`, `Firefox/`, `OPR/`,
 
 The matching history files are under [src/main/resources/catalog/history/](src/main/resources/catalog/history/). Chrome Windows stable is every version the history API still lists (54 through 154). Firefox is Mozilla's stability-release map. Opera is every desktop build in the public archive, including channel builds. `CatalogRefresh` rewrites the snapshot and those files from the same URLs.
 
-| Situation | `is_up_to_date` | `is_ahead_of_catalog` |
-| --- | --- | --- |
-| Older than the catalog | false | false |
-| Same as the catalog | true | false |
-| Newer than the catalog | true | true |
-| Product line marked `eol` (Internet Explorer) | false | false if it is not newer |
+| Situation | `is_up_to_date` | `is_outdated` | `is_end_of_life` | `is_ahead_of_catalog` |
+| --- | --- | --- | --- | --- |
+| Latest build, launched under 5 months ago | true | false | false | false |
+| Latest build, launched 5 or more months ago (Samsung Internet 25, 2024-05-11) | true | true (`age`) | false | false |
+| 1–4 majors behind, and the launch is under 5 months ago or unknown | false | false | false | false |
+| 5 or more majors behind | false | true (`version_gap`) | false | false |
+| Newer than the catalog | true | false, unless that build's own launch date is 5 or more months old | false | true |
+| Product line marked `eol` (Internet Explorer) | false | false | true | false if it is not newer |
 
 Chrome compares the first three components, except a reduced string such as `Chrome/154.0.0.0` (major followed only by zeros). Those are compared on the major only, because the UA no longer carries the real build. Firefox, Safari, Edge, Opera, and Samsung Internet compare the major. Edge and Opera still store the full official build; a reduced or same-major UA stays current.
+
+`is_up_to_date` is still "this build is at or above the catalog latest". `is_outdated` is the separate staleness rule from [catalog/freshness.txt](src/main/resources/catalog/freshness.txt): the major is 5 or more behind the catalog latest, or the detected build's `release_date` is 5 or more calendar months before the parse clock. Both can be true for one result only in the sense that a newest-available build can still be old (Samsung Internet 25). An end-of-life product is `is_end_of_life`, not `is_outdated`. A missing date does not trip the age rule, so Safari (no dates in the history) goes outdated only on the 5-major gap. `versions_behind` is the major gap, never negative. `outdated_reason` is `version_gap` or `age`.
 
 `release_date` and `hours_released_ago` are for the detected build when that build is in the history. A reduced UA of the current major uses the latest build's date. A version the history does not contain, including one ahead of the catalog, leaves both null.
 
@@ -115,9 +119,28 @@ Every parse returns these keys. Unknown values are null. Lists and maps are empt
 | `is_weird` / `is_weird_reason_code` | Empty, too long, or contradictory (`has_contradictory_info`) |
 | `is_restricted` | Crude tokens stuffed into the UA |
 | `is_spam` | SEO / backlink bait, or three or more URLs |
-| `version_check` | `is_checkable`, `is_up_to_date`, `latest_version`, `download_url`, `update_url`, `release_date`, `hours_released_ago`, `is_ahead_of_catalog` |
+| `version_check` | `is_checkable`, `is_up_to_date`, `latest_version`, `download_url`, `update_url`, `release_date`, `hours_released_ago`, `is_ahead_of_catalog`, `is_outdated`, `is_end_of_life`, `versions_behind`, `outdated_reason` |
+| `operating_system_support` | Same freshness idea for the OS. `is_checkable`, `is_up_to_date`, `is_outdated`, `is_end_of_life`, `is_ahead_of_catalog`, `latest_version`, `release_date`, `support_end`, `versions_behind`, `outdated_reason` |
 
 `ParseOptions.allowServersToImpersonateDevices(true)` keeps the phone or tablet embedded in a Googlebot-style UA. The default reports `hardware_type=server`.
+
+## Operating system support
+
+[src/main/resources/catalog/os.txt](src/main/resources/catalog/os.txt) is the offline support table (snapshot 2026-09-23). It is not a version whitelist: a newer major than the table is ahead of the catalog, and a major older than every row of that family is end of life.
+
+`operating_system_support.is_end_of_life` is true when `support_end` is on or before the parse date. That date is the end of security support. Windows 11 Home/Pro feature updates use the consumer date; the UA does not say Enterprise or LTSC. Windows 10 ended 2025-10-14. Extended Security Updates are not a current release.
+
+`is_outdated` uses the same thresholds as browsers, but the gap is the `rank` column (release order). macOS 15 to macOS 26 is one step, because Apple skipped 16–25; iOS 18 to iOS 26 is one step for the same reason. A living release is outdated when 5 or more catalog releases are newer, or its launch is 5 or more calendar months ago. End of life wins: an EOL row is not also `is_outdated`.
+
+| OS as of the test clock 2026-09-24 | Result |
+| --- | --- |
+| macOS 27, iOS 27, iPadOS 27, Android 17 | up to date (launched under 5 months ago) |
+| macOS 15 and 26, iOS 15, 16, 18, and 26, Android 14 through 16, Windows 11 24H2, 25H2, and 26H1 | outdated, security support still open |
+| Windows 11 23H2 and older, Windows 10 and older, Android 13 and older, iOS 17, macOS 14 and older, Windows Phone | end of life |
+| Windows 11 with no build (client hint only) | checkable, not end of life, freshness unknown |
+| Linux, Chrome OS, Fire OS, PlayStation, tvOS | not checkable |
+
+There is no CVE list. An old browser is not marked `is_abusive`, and it is not reclassified as a bot.
 
 ## What v0.1 does not claim
 

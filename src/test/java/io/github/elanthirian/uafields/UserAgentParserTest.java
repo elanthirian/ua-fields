@@ -44,11 +44,19 @@ class UserAgentParserTest {
         Map<String, Object> check = check(result);
         assertEquals(false, check.get("is_up_to_date"));
         assertEquals(false, check.get("is_ahead_of_catalog"));
+        assertEquals(true, check.get("is_outdated"));
+        assertEquals("version_gap", check.get("outdated_reason"));
+        assertEquals(90, check.get("versions_behind"));
+        assertEquals(false, check.get("is_end_of_life"));
         assertEquals(List.of("154", "0", "8037", "58"), check.get("latest_version"));
         assertEquals("2018-02-01", check.get("release_date"));
         assertEquals(75768L, check.get("hours_released_ago"));
         assertFalse((Boolean) result.get("is_abusive"));
         assertFalse((Boolean) result.get("is_weird"));
+        assertEquals(true, os(result).get("is_end_of_life"));
+        assertEquals(false, os(result).get("is_outdated"));
+        assertEquals("27", os(result).get("latest_version"));
+        assertEquals("2016-12-01", os(result).get("support_end"));
     }
 
     @Test
@@ -63,8 +71,13 @@ class UserAgentParserTest {
         Map<String, Object> check = check(result);
         assertEquals(true, check.get("is_up_to_date"));
         assertEquals(false, check.get("is_ahead_of_catalog"));
+        assertEquals(false, check.get("is_outdated"));
+        assertEquals(0, check.get("versions_behind"));
         assertEquals("2026-09-22", check.get("release_date"));
         assertEquals(48L, check.get("hours_released_ago"));
+        assertEquals(true, os(result).get("is_end_of_life"));
+        assertEquals("2025-10-14", os(result).get("support_end"));
+        assertEquals("11-26H1", os(result).get("latest_version"));
     }
 
     @Test
@@ -73,6 +86,8 @@ class UserAgentParserTest {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.8000.1 Safari/537.36");
         assertEquals(false, check(result).get("is_up_to_date"));
         assertEquals(false, check(result).get("is_ahead_of_catalog"));
+        assertEquals(false, check(result).get("is_outdated"));
+        assertEquals(0, check(result).get("versions_behind"));
     }
 
     @Test
@@ -84,6 +99,8 @@ class UserAgentParserTest {
         assertEquals(List.of("500", "1", "2", "3"), result.get("software_version_full"));
         assertEquals(true, check(result).get("is_up_to_date"));
         assertEquals(true, check(result).get("is_ahead_of_catalog"));
+        assertEquals(false, check(result).get("is_outdated"));
+        assertEquals(false, check(result).get("is_end_of_life"));
         assertNull(check(result).get("release_date"));
         assertNull(check(result).get("hours_released_ago"));
     }
@@ -95,6 +112,10 @@ class UserAgentParserTest {
         assertEquals("Windows 11", result.get("operating_system"));
         assertEquals("11", result.get("operating_system_version"));
         assertEquals(List.of("10", "0", "22631"), result.get("operating_system_version_full"));
+        assertEquals(true, os(result).get("is_end_of_life"));
+        assertEquals(false, os(result).get("is_outdated"));
+        assertEquals("2025-11-12", os(result).get("support_end"));
+        assertEquals(3, os(result).get("versions_behind"));
     }
 
     @Test
@@ -104,6 +125,11 @@ class UserAgentParserTest {
                 ClientHints.empty().platform("Windows").platformVersion("15.0.0").mobile(false));
         assertEquals("Windows 11", windows.get("operating_system"));
         assertEquals("15.0.0", dict(windows).get("Platform version"));
+        assertEquals(true, os(windows).get("is_checkable"));
+        assertNull(os(windows).get("is_up_to_date"));
+        assertNull(os(windows).get("is_outdated"));
+        assertEquals(false, os(windows).get("is_end_of_life"));
+        assertEquals("11-26H1", os(windows).get("latest_version"));
 
         ParseResult edge = parser.parse(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
@@ -133,6 +159,8 @@ class UserAgentParserTest {
         assertEquals("Gecko", current.get("layout_engine_name"));
         assertEquals(List.of("20100101"), current.get("layout_engine_version"));
         assertEquals(true, check(current).get("is_up_to_date"));
+        assertEquals(false, check(current).get("is_outdated"));
+        assertEquals(false, os(current).get("is_checkable"));
 
         ParseResult catalina = parser.parse(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:136.0) Gecko/20100101 Firefox/136.0");
@@ -162,6 +190,8 @@ class UserAgentParserTest {
         assertEquals("WebKit", iphone.get("layout_engine_name"));
         assertEquals(List.of("605", "1", "15"), iphone.get("layout_engine_version"));
         assertEquals(false, check(iphone).get("is_up_to_date"));
+        assertEquals(true, os(iphone).get("is_end_of_life"));
+        assertEquals("2025-05-13", os(iphone).get("support_end"));
 
         ParseResult ipad = parser.parse(
                 "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1");
@@ -173,6 +203,10 @@ class UserAgentParserTest {
         assertEquals("Safari 40 on macOS 27.1", futureOs.get("simple_software_string"));
         assertEquals("27.1", futureOs.get("operating_system_version"));
         assertEquals(true, check(futureOs).get("is_ahead_of_catalog"));
+        assertEquals(true, os(futureOs).get("is_up_to_date"));
+        assertEquals(false, os(futureOs).get("is_outdated"));
+        assertEquals(false, os(futureOs).get("is_end_of_life"));
+        assertEquals(0, os(futureOs).get("versions_behind"));
     }
 
     @Test
@@ -290,6 +324,10 @@ class UserAgentParserTest {
         assertEquals(List.of("7", "0"), ie11.get("layout_engine_version"));
         assertEquals(false, check(ie11).get("is_up_to_date"));
         assertEquals(true, check(ie11).get("is_checkable"));
+        assertEquals(true, check(ie11).get("is_end_of_life"));
+        assertEquals(false, check(ie11).get("is_outdated"));
+        assertNull(check(ie11).get("outdated_reason"));
+        assertEquals(true, os(ie11).get("is_end_of_life"));
 
         ParseResult compat = parser.parse(
                 "Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/7.0; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729)");
@@ -395,6 +433,14 @@ class UserAgentParserTest {
         assertEquals(false, check(current).get("is_ahead_of_catalog"));
         assertEquals(List.of("25", "0", "0", "41"), check(current).get("latest_version"));
         assertEquals("2024-05-11", check(current).get("release_date"));
+        assertEquals(true, check(current).get("is_outdated"));
+        assertEquals("age", check(current).get("outdated_reason"));
+        assertEquals(0, check(current).get("versions_behind"));
+        assertEquals(false, check(current).get("is_end_of_life"));
+        assertEquals(true, os(current).get("is_outdated"));
+        assertEquals("age", os(current).get("outdated_reason"));
+        assertEquals(false, os(current).get("is_end_of_life"));
+        assertEquals(3, os(current).get("versions_behind"));
 
         ParseResult unpublished = parser.parse(
                 "Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/30.0 Chrome/121.0.0.0 Mobile Safari/537.36");
@@ -493,6 +539,114 @@ class UserAgentParserTest {
         assertEquals("ATV OS X", appleTv.get("operating_system_name"));
         assertEquals("8.3", appleTv.get("operating_system_version"));
         assertEquals("Apple TV", appleTv.get("operating_platform"));
+        assertEquals(false, os(appleTv).get("is_checkable"));
+    }
+
+    @Test
+    void outdatedOsAndBrowsersUseFiveReleasesOrFiveMonths() {
+        ParseResult four = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36");
+        assertEquals(false, check(four).get("is_up_to_date"));
+        assertEquals(false, check(four).get("is_outdated"));
+        assertEquals(4, check(four).get("versions_behind"));
+        assertNull(check(four).get("outdated_reason"));
+
+        ParseResult five = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36");
+        assertEquals(true, check(five).get("is_outdated"));
+        assertEquals("version_gap", check(five).get("outdated_reason"));
+        assertEquals(5, check(five).get("versions_behind"));
+        assertEquals(false, check(five).get("is_end_of_life"));
+
+        ParseResult android17 = parser.parse(
+                "Mozilla/5.0 (Linux; Android 17; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36");
+        assertEquals("Android 17", android17.get("operating_system"));
+        assertEquals(true, os(android17).get("is_up_to_date"));
+        assertEquals(false, os(android17).get("is_outdated"));
+        assertEquals(false, os(android17).get("is_end_of_life"));
+        assertEquals("2026-06-16", os(android17).get("release_date"));
+
+        ParseResult android18 = parser.parse(
+                "Mozilla/5.0 (Linux; Android 18; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36");
+        assertEquals(true, os(android18).get("is_ahead_of_catalog"));
+        assertEquals(true, os(android18).get("is_up_to_date"));
+        assertEquals(false, os(android18).get("is_outdated"));
+
+        ParseResult android12 = parser.parse(
+                "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36");
+        assertEquals(true, os(android12).get("is_end_of_life"));
+        assertEquals(false, os(android12).get("is_outdated"));
+        assertEquals("2025-03-03", os(android12).get("support_end"));
+
+        ParseResult marshmallow = parser.parse(
+                "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Mobile Safari/537.36");
+        assertEquals("Android (Marshmallow)", marshmallow.get("operating_system"));
+        assertEquals(true, os(marshmallow).get("is_end_of_life"));
+        assertEquals(false, os(marshmallow).get("is_outdated"));
+        assertEquals("17", os(marshmallow).get("latest_version"));
+
+        ParseResult win26 = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0.28000; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36");
+        assertEquals("Windows 11", win26.get("operating_system"));
+        assertEquals(true, os(win26).get("is_outdated"));
+        assertEquals("age", os(win26).get("outdated_reason"));
+        assertEquals(false, os(win26).get("is_end_of_life"));
+        assertEquals(0, os(win26).get("versions_behind"));
+        assertEquals("2026-02-10", os(win26).get("release_date"));
+        assertEquals("2028-03-14", os(win26).get("support_end"));
+
+        ParseResult win24 = parser.parse(
+                "Mozilla/5.0 (Windows NT 10.0.26100; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36");
+        assertEquals(true, os(win24).get("is_outdated"));
+        assertEquals("age", os(win24).get("outdated_reason"));
+        assertEquals(false, os(win24).get("is_end_of_life"));
+        assertEquals(2, os(win24).get("versions_behind"));
+        assertEquals("2026-10-13", os(win24).get("support_end"));
+
+        ParseResult sequoia = parser.parse(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15");
+        assertEquals("macOS (Sequoia)", sequoia.get("operating_system"));
+        assertEquals(true, os(sequoia).get("is_outdated"));
+        assertEquals("age", os(sequoia).get("outdated_reason"));
+        assertEquals(false, os(sequoia).get("is_end_of_life"));
+        assertEquals(2, os(sequoia).get("versions_behind"));
+
+        ParseResult sonoma = parser.parse(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15");
+        assertEquals(true, os(sonoma).get("is_end_of_life"));
+        assertEquals(false, os(sonoma).get("is_outdated"));
+        assertEquals("2026-09-14", os(sonoma).get("support_end"));
+
+        ParseResult ios26 = parser.parse(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 26_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1");
+        assertEquals(true, os(ios26).get("is_outdated"));
+        assertEquals("age", os(ios26).get("outdated_reason"));
+        assertEquals(false, os(ios26).get("is_end_of_life"));
+        assertEquals(1, os(ios26).get("versions_behind"));
+
+        ParseResult ios27 = parser.parse(
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1");
+        assertEquals("iOS 27", ios27.get("operating_system"));
+        assertEquals(true, os(ios27).get("is_up_to_date"));
+        assertEquals(false, os(ios27).get("is_outdated"));
+        assertEquals(false, os(ios27).get("is_end_of_life"));
+
+        ParseResult ipad = parser.parse(
+                "Mozilla/5.0 (iPad; CPU OS 27_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1");
+        assertEquals("iPadOS 27", ipad.get("operating_system"));
+        assertEquals(true, os(ipad).get("is_up_to_date"));
+
+        ParseResult phone = parser.parse(
+                "Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 920) like Gecko");
+        assertEquals("Windows Phone", phone.get("operating_system_name"));
+        assertEquals(true, os(phone).get("is_end_of_life"));
+        assertEquals("2019-12-10", os(phone).get("support_end"));
+
+        ParseResult cros = parser.parse(
+                "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36");
+        assertEquals(false, os(cros).get("is_checkable"));
+        assertEquals(5, Freshness.bundled().majorGap);
+        assertEquals(5, Freshness.bundled().ageMonths);
     }
 
     @Test
@@ -502,6 +656,11 @@ class UserAgentParserTest {
         assertTrue(Version.parse("Chrome/500.1.2.3").reduced() == false);
         assertTrue(Version.parse("154.0.0.0").reduced());
         assertEquals("500", Version.parse("Chrome/500.1.2.3").major());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> os(ParseResult result) {
+        return (Map<String, Object>) result.get("operating_system_support");
     }
 
     @SuppressWarnings("unchecked")
